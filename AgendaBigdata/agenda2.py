@@ -51,8 +51,9 @@ class CorreoElectronico:
         return {'email': self.email, 'pagina_web': self.pagina_web}
 
 class Contacto(Persona, Direccion, Telefono, CorreoElectronico):
-    def __init__(self, nombre, apellido, fecha_nacimiento, calle, ciudad, codigo_postal, numero_exterior, numero_interior, colonia, numero, email, pagina_web):
-        # Convertir la cadena de fecha_nacimiento a un objeto datetime
+    def __init__(self, nombre, apellido, fecha_nacimiento, calle, ciudad, codigo_postal, numero_exterior, 
+                 numero_interior, colonia, numero, email, pagina_web):
+        
         fecha_nacimiento_dt = datetime.strptime(fecha_nacimiento, "%Y-%m-%d")
         
         Persona.__init__(self, nombre, apellido, fecha_nacimiento_dt)
@@ -70,21 +71,49 @@ class Contacto(Persona, Direccion, Telefono, CorreoElectronico):
 
 class Agenda:
     def __init__(self):
-        # Define la cadena de conexión directamente
+       
         connection_string = "mongodb+srv://agendapx:1234.@agenda.snyekgy.mongodb.net/"
         self.cliente = pymongo.MongoClient(connection_string)
         self.db = self.cliente["Agenda"]
         self.collection = self.db["contactos"]
+    
+    def buscar_contacto(self):
+        print("\nBuscar contacto por:")
+        print("1. Nombre")
+        print("2. Número de Teléfono")
+        opcion_busqueda = input("Seleccione la opción de búsqueda (1-2): ")
+
+        if opcion_busqueda == "1":
+            nombre_busqueda = input("Ingrese el nombre del contacto a buscar: ")
+            contactos = self.collection.find({'nombre': nombre_busqueda}).sort('nombre')
+        elif opcion_busqueda == "2":
+            numero_busqueda = input("Ingrese el número de teléfono del contacto a buscar: ")
+            contactos = self.collection.find({'numero': numero_busqueda})
+        else:
+            print("Opción no válida.")
+            return
+
+        contactos_lista = list(contactos)
+
+        if not contactos_lista:
+            print("No se encontraron contactos.")
+        else:
+            print("\nResultados de la búsqueda:")
+            for i, contacto in enumerate(contactos_lista):
+                print("\nContacto {}:".format(i + 1))
+                for key, value in contacto.items():
+                    print(f"{key.capitalize()}: {value}")
+
 
     def agregar_contacto(self, contacto):
         self.collection.insert_one(contacto.to_dict())
         print("Contacto agregado exitosamente.")
 
     def visualizar_agenda(self):
-        # Obtenemos todos los contactos ordenados por nombre
+        
         contactos = self.collection.find().sort('nombre')
 
-        # Convertimos el cursor a una lista para poder contar elementos
+      
         contactos_lista = list(contactos)
 
         if len(contactos_lista) == 0:
@@ -152,13 +181,13 @@ class Agenda:
             print(f"No se encontró ningún contacto con el número de teléfono: {numero_telefono}")
 
     def eliminar_contacto(self):
-        # Muestra la lista de contactos
+        
         self.visualizar_agenda()
 
-        # Solicitar al usuario el número de teléfono del contacto a eliminar
+       
         numero_telefono = input("Ingrese el número de teléfono del contacto a eliminar: ")
 
-        # Encuentra el contacto en la base de datos por el número de teléfono
+        
         contacto = self.collection.find_one({'numero': numero_telefono})
 
         if contacto:
@@ -186,12 +215,12 @@ class Agenda:
             print("2. Visualizar agenda")
             print("3. Modificar contacto")
             print("4. Eliminar contacto")
-            print("5. Salir")
+            print("5. Buscar contacto")
+            print("6. Salir")
 
             opcion = input("Seleccione una opción: ")
 
             if opcion == "1":
-                # Validaciones de entrada al agregar contacto
                 nombre = input("Nombre: ")
                 while not nombre.isalpha():
                     print("Por favor, ingrese solo letras para el nombre.")
@@ -202,13 +231,14 @@ class Agenda:
                     print("Por favor, ingrese solo letras para el apellido.")
                     apellido = input("Apellido: ")
 
-                # Ingresar día, mes y año por separado para la fecha de nacimiento
+                
                 dia_nacimiento = input("Día de Nacimiento: ")
                 mes_nacimiento = input("Mes de Nacimiento: ")
                 anio_nacimiento = input("Año de Nacimiento: ")
 
-                # Validar que la fecha de nacimiento sea válida
-                while not (dia_nacimiento.isdigit() and mes_nacimiento.isdigit() and anio_nacimiento.isdigit() and 1 <= int(dia_nacimiento) <= 31 and 1 <= int(mes_nacimiento) <= 12):
+                
+                while not (dia_nacimiento.isdigit() and mes_nacimiento.isdigit() and anio_nacimiento.isdigit() 
+                           and 1 <= int(dia_nacimiento) <= 31 and 1 <= int(mes_nacimiento) <= 12):
                     print("Por favor, ingrese una fecha de nacimiento válida.")
                     dia_nacimiento = input("Día de Nacimiento: ")
                     mes_nacimiento = input("Mes de Nacimiento: ")
@@ -228,19 +258,18 @@ class Agenda:
 
                 codigo_postal = input("Código Postal: ")
 
-                # Validar que el código postal contenga solo números
                 while not codigo_postal.isdigit():
                     print("Por favor, ingrese solo números para el código postal.")
                     codigo_postal = input("Código Postal: ")
 
                 numero_exterior = input("Número Exterior: ")
-                # Validar que el número exterior contenga solo números
+                
                 while not numero_exterior.isdigit():
                     print("Por favor, ingrese solo números para el número exterior.")
                     numero_exterior = input("Número Exterior: ")
 
                 numero_interior = input("Número Interior: ")
-                # Validar que el número interior contenga solo números
+                
                 while not numero_interior.isdigit():
                     print("Por favor, ingrese solo números para el número interior.")
                     numero_interior = input("Número Interior: ")
@@ -251,18 +280,18 @@ class Agenda:
                     colonia = input("Colonia: ")
 
                 numero_telefono = input("Número de Teléfono: ")
-                # Validar que el número de teléfono contenga solo números y tenga longitud 10
+                
                 while not numero_telefono.isdigit() or len(numero_telefono) != 10:
                     print("Por favor, ingrese un número de teléfono válido (10 dígitos).")
                     numero_telefono = input("Número de Teléfono: ")
 
                 email = input("Correo Electrónico: ")
-                # Validar que el correo electrónico sea válido
+                
                 while "@" not in email or "." not in email:
                     print("Por favor, ingrese un correo electrónico válido.")
                     email = input("Correo Electrónico: ")
 
-                # Preguntar si tiene página web y obtener la información
+              
                 pagina_web = self.solicitar_pagina_web()
 
                 nuevo_contacto = Contacto(
@@ -289,8 +318,11 @@ class Agenda:
 
             elif opcion == "4":
                 self.eliminar_contacto()
-
+            
             elif opcion == "5":
+                self.buscar_contacto()
+
+            elif opcion == "6":
                 print("Saliendo del programa. ¡Hasta luego!")
                 self.cliente.close()
                 break
@@ -301,3 +333,5 @@ class Agenda:
 if __name__ == "__main__":
     agenda = Agenda()
     agenda.ejecutar()
+
+
